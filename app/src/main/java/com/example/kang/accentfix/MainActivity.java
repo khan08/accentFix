@@ -1,24 +1,32 @@
 package com.example.kang.accentfix;
 
+import android.content.Intent;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.AudioTrack;
 import android.media.MediaRecorder;
 import android.os.Environment;
+import android.speech.RecognitionListener;
+import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
+
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
+    private SpeechRecognizer sr;
     private static final int RECORDER_SAMPLERATE = 44100;
     private static final int RECORDER_CHANNELS = AudioFormat.CHANNEL_IN_MONO;
     private static final int RECORDER_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT;
@@ -39,6 +47,51 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         setButtonHandlers();
         enableButtons(false);
+        sr = SpeechRecognizer.createSpeechRecognizer(this);
+        sr.setRecognitionListener(new listener());
+    }
+    class listener implements RecognitionListener {
+        public void onResults(Bundle results)
+        {
+            String str = new String();
+            Log.d("D", "onResults " + results);
+            ArrayList data = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+            ((TextView) findViewById(R.id.audioData)).setText(data.get(0).toString());
+        }
+        public void onPartialResults(Bundle partialResults)
+        {
+            Log.d("D", "onPartialResults");
+        }
+        public void onEvent(int eventType, Bundle params)
+        {
+            Log.d("D", "onEvent " + eventType);
+        }
+        public void onReadyForSpeech(Bundle params) {
+            Log.d("D", "onReadyForSpeech");
+        }
+
+        public void onBeginningOfSpeech() {
+            Log.d("D", "onBeginningOfSpeech");
+        }
+
+        public void onRmsChanged(float rmsdB) {
+            Log.d("D", "onRmsChanged");
+        }
+
+        public void onBufferReceived(byte[] buffer) {
+            Log.d("D", "onBufferReceived");
+        }
+
+        public void onEndOfSpeech() {
+            Log.d("D", "onEndofSpeech");
+        }
+
+        public void onError(int error) {
+            Log.d("D", "error " + error);
+            if (error == 7){
+                ((TextView) findViewById(R.id.audioData)).setText("No match...");
+            }
+        }
     }
 
     private void setButtonHandlers() {
@@ -60,6 +113,12 @@ public class MainActivity extends AppCompatActivity {
                     break;
                 }
             }
+            Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+            intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE,"voice.recognition.test");
+            intent.putExtra(RecognizerIntent.EXTRA_CONFIDENCE_SCORES, true);
+            intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS,5);
+            sr.startListening(intent);
         }
     };
 
@@ -94,6 +153,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void stopRecording() {
         // stops the recording activity
+        if (null != sr) {
+            sr.stopListening();
+        }
         if (null != recorder) {
             isRecording = false;
             recorder.stop();
@@ -115,7 +177,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             InputStream inputStream = new FileInputStream(fileName);
 
-            int minBufferSize =         AudioTrack.getMinBufferSize(44100,AudioFormat.CHANNEL_OUT_MONO,AudioFormat.ENCODING_PCM_16BIT);
+            int minBufferSize = AudioTrack.getMinBufferSize(44100,AudioFormat.CHANNEL_OUT_MONO,AudioFormat.ENCODING_PCM_16BIT);
             audioData = new byte[minBufferSize];
 
             AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,RECORDER_SAMPLERATE,AudioFormat.CHANNEL_OUT_MONO,RECORDER_AUDIO_ENCODING,minBufferSize,AudioTrack.MODE_STREAM);
