@@ -1,33 +1,17 @@
 package com.example.kang.accentfix;
 
-import android.annotation.TargetApi;
-import android.media.AudioAttributes;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.AudioTrack;
-import android.media.MediaPlayer;
 import android.media.MediaRecorder;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Environment;
-import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
-
-import com.google.android.gms.appindexing.Action;
-import com.google.android.gms.appindexing.AppIndex;
-import com.google.android.gms.common.api.GoogleApiClient;
-
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -106,7 +90,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }, "AudioRecorder Thread");
         recordingThread.start();
-
     }
 
     private void stopRecording() {
@@ -120,14 +103,13 @@ public class MainActivity extends AppCompatActivity {
         }
         playbackThread = new Thread(new Runnable() {
             public void run() {
-                playAudio(sData);
+                playAudio();
             }
         }, "Playback Thread");
         playbackThread.start();
-
     }
 
-    private void playAudio(byte[] sData) {
+    private void playAudio() {
         byte[] audioData = null;
 
         try {
