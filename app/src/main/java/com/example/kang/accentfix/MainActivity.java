@@ -18,11 +18,15 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
@@ -34,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
     private AudioTrack audioTrack = null;
     private Thread recordingThread = null;
     private Thread playbackThread = null;
+    private Thread webThread = null;
     private static String fileName = Environment.getExternalStorageDirectory().getAbsolutePath()+"/test.txt";
     FileOutputStream os = null;
     private boolean isRecording = false;
@@ -49,6 +54,27 @@ public class MainActivity extends AppCompatActivity {
         enableButtons(false);
         sr = SpeechRecognizer.createSpeechRecognizer(this);
         sr.setRecognitionListener(new listener());
+        try {
+            webThread = new Thread(new Runnable() {
+                public void run() {
+                    Log.d("I/ConnServer", "Running");
+                    String host = "192.168.1.153";
+                    int port = 8888;
+                    try{
+                        Socket s = new Socket(host, port);
+                        PrintWriter out = new PrintWriter(s.getOutputStream(), true);
+                        BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream()));
+                        String data = in.readLine();
+                        s.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+            webThread.start();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
     class listener implements RecognitionListener {
         public void onResults(Bundle results)
