@@ -17,6 +17,9 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.example.kang.server.TcpClient;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -54,32 +57,10 @@ public class MainActivity extends AppCompatActivity {
         enableButtons(false);
         sr = SpeechRecognizer.createSpeechRecognizer(this);
         sr.setRecognitionListener(new listener());
-        try {
-            webThread = new Thread(new Runnable() {
-                public void run() {
-                    Log.d("I/ConnServer", "Running");
-                    String host = "192.168.1.153";
-                    int port = 8888;
-                    try{
-                        Socket s = new Socket(host, port);
-                        PrintWriter out = new PrintWriter(s.getOutputStream(), true);
-                        BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream()));
-                        String data = in.readLine();
-                        s.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
-            webThread.start();
-        }catch (Exception e){
-            e.printStackTrace();
-        }
     }
     class listener implements RecognitionListener {
         public void onResults(Bundle results)
         {
-            String str = new String();
             Log.d("D", "onResults " + results);
             ArrayList data = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
             ((TextView) findViewById(R.id.audioData)).setText(data.get(0).toString());
@@ -195,6 +176,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }, "Playback Thread");
         playbackThread.start();
+        sendData();
     }
 
     private void playAudio() {
@@ -238,6 +220,15 @@ public class MainActivity extends AppCompatActivity {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    private void sendData(){
+        try {
+            TcpClient tcpClient = new TcpClient(sData);
+            tcpClient.connectandSend(getApplicationContext(),"192.168.1.153",8888);
+        }catch (Exception e){
+            e.printStackTrace();
         }
     }
 }
