@@ -33,7 +33,6 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
-    private SpeechRecognizer sr;
     private static final int RECORDER_SAMPLERATE = 44100;
     private static final int RECORDER_CHANNELS = AudioFormat.CHANNEL_IN_MONO;
     private static final int RECORDER_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT;
@@ -55,50 +54,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         setButtonHandlers();
         enableButtons(false);
-        sr = SpeechRecognizer.createSpeechRecognizer(this);
-        sr.setRecognitionListener(new listener());
-    }
-    class listener implements RecognitionListener {
-        public void onResults(Bundle results)
-        {
-            Log.d("D", "onResults " + results);
-            ArrayList data = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-            ((TextView) findViewById(R.id.audioData)).setText(data.get(0).toString());
-        }
-        public void onPartialResults(Bundle partialResults)
-        {
-            Log.d("D", "onPartialResults");
-        }
-        public void onEvent(int eventType, Bundle params)
-        {
-            Log.d("D", "onEvent " + eventType);
-        }
-        public void onReadyForSpeech(Bundle params) {
-            Log.d("D", "onReadyForSpeech");
-        }
-
-        public void onBeginningOfSpeech() {
-            Log.d("D", "onBeginningOfSpeech");
-        }
-
-        public void onRmsChanged(float rmsdB) {
-            Log.d("D", "onRmsChanged");
-        }
-
-        public void onBufferReceived(byte[] buffer) {
-            Log.d("D", "onBufferReceived");
-        }
-
-        public void onEndOfSpeech() {
-            Log.d("D", "onEndofSpeech");
-        }
-
-        public void onError(int error) {
-            Log.d("D", "error " + error);
-            if (error == 7){
-                ((TextView) findViewById(R.id.audioData)).setText("No match...");
-            }
-        }
     }
 
     private void setButtonHandlers() {
@@ -125,7 +80,6 @@ public class MainActivity extends AppCompatActivity {
             intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE,"voice.recognition.test");
             intent.putExtra(RecognizerIntent.EXTRA_CONFIDENCE_SCORES, true);
             intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS,5);
-            sr.startListening(intent);
         }
     };
 
@@ -160,9 +114,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void stopRecording() {
         // stops the recording activity
-        if (null != sr) {
-            sr.stopListening();
-        }
         if (null != recorder) {
             isRecording = false;
             recorder.stop();
